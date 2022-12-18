@@ -4,6 +4,6 @@ import (
 	"github.com/harshitsaini/micedb/core"
 )
 
-func main(){
+func main() {
 	core.RunServer()
 }
