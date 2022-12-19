@@ -1,11 +1,24 @@
 package core
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"net"
 	"strconv"
+	"strings"
 )
+
+func respondPing(command_arr []interface{}) ([]byte, error) {
+	if len(command_arr) == 0 {
+		return []byte("+PONG\r\n"), nil
+	} else if len(command_arr) >= 1 {
+		return []byte("-ERR wrong number of arguments for 'ping' command\r\n"), nil
+	} else {
+		arg := command_arr[0].(string)
+		return []byte(fmt.Sprintf("$%d\r\n%s\r\n", len(arg), arg)), nil
+	}
+}
 
 func readCommand(c net.Conn) (string, error) {
 	// TODO: Max read in one shot is 512 bytes
@@ -20,7 +33,23 @@ func readCommand(c net.Conn) (string, error) {
 }
 
 func respond(cmd string, c net.Conn) error {
-	if _, err := c.Write([]byte(cmd)); err != nil {
+
+	val, _ := Decode([]byte(cmd))
+
+	arr_val := val.([]interface{})
+	command := strings.ToUpper(arr_val[0].(string))
+
+	var response = []byte("$-1\r\n")
+	// var err = nil
+
+	if command == "PING" {
+		// fmt.Println("YES")
+		response, _ = respondPing(arr_val[1:])
+	} else {
+		// fmt.Println("NO")
+	}
+
+	if _, err := c.Write(response); err != nil {
 		return err
 	}
 	return nil
